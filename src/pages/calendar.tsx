@@ -12,7 +12,7 @@ import {
 } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { PageHeader } from "@/components/common/page-header"
-import { EntryListItem } from "@/components/entries/entry-list-item"
+import { EntryListItem, EntryListItemSkeleton } from "@/components/entries/entry-list-item"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { formatDateLong, formatMonthYear, toISODate } from "@/lib/format"
@@ -22,7 +22,7 @@ import { useEntries } from "@/hooks/use-entries"
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function CalendarPage() {
-  const { entries } = useEntries()
+  const { entries, isLoading } = useEntries()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const [selectedISO, setSelectedISO] = useState(() => toISODate(new Date()))
 
@@ -117,7 +117,13 @@ export function CalendarPage() {
         <h2 className="mb-2 text-sm font-medium text-foreground">
           Entries for {formatDateLong(selectedISO)}
         </h2>
-        {selectedEntries.length === 0 ? (
+        {isLoading ? (
+          <div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <EntryListItemSkeleton key={i} />
+            ))}
+          </div>
+        ) : selectedEntries.length === 0 ? (
           <p className="border-b py-3 text-sm text-muted-foreground">
             No entries logged on this day.
           </p>

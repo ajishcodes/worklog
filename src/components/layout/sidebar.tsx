@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom"
 import { NotebookPen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS } from "./nav-items"
-import { ThemeToggle } from "./theme-toggle"
 import { UserMenu } from "./user-menu"
 
 export function Sidebar() {
@@ -35,7 +34,6 @@ export function Sidebar() {
 
       <div className="border-t px-2 py-2">
         <UserMenu />
-        <ThemeToggle />
       </div>
     </aside>
   )

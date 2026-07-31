@@ -2,8 +2,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Switch } from "@/components/ui/switch"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { DurationInput } from "@/components/entries/duration-input"
 import {
   Select,
   SelectContent,
@@ -33,6 +39,23 @@ const STATUS_OPTIONS: { value: EntryStatus; label: string }[] = [
   { value: "blocked", label: "Blocked" },
 ]
 
+function FieldTooltip({
+  value,
+  children,
+}: {
+  value?: string
+  children: React.ReactNode
+}) {
+  if (!value) return children
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent className="max-w-xs break-all">{value}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 interface EntryFormProps {
   defaultValues?: EntryFormValues
   submitLabel: string
@@ -61,7 +84,9 @@ export function EntryForm({
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="Fix flaky export pipeline test" {...field} />
+                <FieldTooltip value={field.value}>
+                  <Input placeholder="Fix flaky export pipeline test" {...field} />
+                </FieldTooltip>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -88,9 +113,13 @@ export function EntryForm({
             name="durationMinutes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
+                <FormLabel>Duration</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <DurationInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -131,7 +160,9 @@ export function EntryForm({
               <FormItem>
                 <FormLabel>Project</FormLabel>
                 <FormControl>
-                  <Input placeholder="Worklog" {...field} />
+                  <FieldTooltip value={field.value}>
+                    <Input placeholder="Worklog" {...field} />
+                  </FieldTooltip>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -145,7 +176,9 @@ export function EntryForm({
               <FormItem>
                 <FormLabel>Tags</FormLabel>
                 <FormControl>
-                  <Input placeholder="bugfix, api, testing" {...field} />
+                  <FieldTooltip value={field.value}>
+                    <Input placeholder="bugfix, api, testing" {...field} />
+                  </FieldTooltip>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -160,7 +193,12 @@ export function EntryForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea rows={3} {...field} />
+                <RichTextEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="What did you work on?"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -174,7 +212,13 @@ export function EntryForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea rows={2} {...field} />
+                <RichTextEditor
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Anything else worth remembering?"
+                  minHeightClassName="min-h-16"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -189,7 +233,9 @@ export function EntryForm({
               <FormItem>
                 <FormLabel>Repository URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://github.com/..." {...field} />
+                  <FieldTooltip value={field.value}>
+                    <Input placeholder="https://github.com/..." {...field} />
+                  </FieldTooltip>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -203,7 +249,9 @@ export function EntryForm({
               <FormItem>
                 <FormLabel>Pull request URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://github.com/.../pull/1" {...field} />
+                  <FieldTooltip value={field.value}>
+                    <Input placeholder="https://github.com/.../pull/1" {...field} />
+                  </FieldTooltip>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -217,7 +265,9 @@ export function EntryForm({
               <FormItem>
                 <FormLabel>Commit hash</FormLabel>
                 <FormControl>
-                  <Input placeholder="a1b2c3d" {...field} />
+                  <FieldTooltip value={field.value}>
+                    <Input placeholder="a1b2c3d" {...field} />
+                  </FieldTooltip>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -242,10 +292,17 @@ export function EntryForm({
         />
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={form.formState.isSubmitting}
+          >
             Cancel
           </Button>
-          <Button type="submit">{submitLabel}</Button>
+          <Button type="submit" loading={form.formState.isSubmitting}>
+            {submitLabel}
+          </Button>
         </div>
       </form>
     </Form>

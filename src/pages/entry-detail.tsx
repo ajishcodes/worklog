@@ -5,11 +5,17 @@ import {
   ExternalLink,
   GitCommitHorizontal,
   GitPullRequest,
+  Loader2,
   Moon,
   Trash2,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +32,7 @@ import { EntryForm } from "@/components/entries/entry-form"
 import { useEntries } from "@/hooks/use-entries"
 import { entryToFormValues, formValuesToDraft } from "@/lib/entry-schema"
 import { formatDateLong, formatDuration, formatTime } from "@/lib/format"
+import { sanitizeHtml } from "@/lib/sanitize-html"
 
 const STATUS_LABEL: Record<string, string> = {
   completed: "Completed",
@@ -41,6 +48,7 @@ export function EntryDetailPage() {
   const entry = entries.find((e) => e.id === id)
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!entry) {
     return (
@@ -121,18 +129,23 @@ export function EntryDetailPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={async () => {
+                  disabled={isDeleting}
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    setIsDeleting(true)
                     try {
                       await deleteEntry(entry.id)
                       navigate("/entries")
                     } catch {
                       setError("Could not delete the entry. Please try again.")
+                      setIsDeleting(false)
                     }
                   }}
                 >
+                  {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -160,17 +173,19 @@ export function EntryDetailPage() {
 
       <section className="mb-8">
         <h2 className="mb-2 text-sm font-medium text-foreground">Description</h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {entry.description}
-        </p>
+        <div
+          className="text-sm leading-relaxed text-muted-foreground [&_a]:text-foreground [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.description) }}
+        />
       </section>
 
       {entry.notes && (
         <section className="mb-8">
           <h2 className="mb-2 text-sm font-medium text-foreground">Notes</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {entry.notes}
-          </p>
+          <div
+            className="text-sm leading-relaxed text-muted-foreground [&_a]:text-foreground [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.notes) }}
+          />
         </section>
       )}
 
@@ -179,32 +194,47 @@ export function EntryDetailPage() {
           <h2 className="mb-2 text-sm font-medium text-foreground">Links</h2>
           <div className="flex flex-col gap-2 text-sm">
             {entry.githubUrl && (
-              <a
-                href={entry.githubUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <ExternalLink className="size-3.5" />
-                Repository
-              </a>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={entry.githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-fit items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    Repository
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>{entry.githubUrl}</TooltipContent>
+              </Tooltip>
             )}
             {entry.prUrl && (
-              <a
-                href={entry.prUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <GitPullRequest className="size-3.5" />
-                Pull request
-              </a>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={entry.prUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-fit items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <GitPullRequest className="size-3.5" />
+                    Pull request
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>{entry.prUrl}</TooltipContent>
+              </Tooltip>
             )}
             {entry.commitHash && (
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <GitCommitHorizontal className="size-3.5" />
-                <code className="text-xs">{entry.commitHash}</code>
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex w-fit items-center gap-1.5 text-muted-foreground">
+                    <GitCommitHorizontal className="size-3.5" />
+                    <code className="text-xs">{entry.commitHash}</code>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Commit {entry.commitHash}</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </section>

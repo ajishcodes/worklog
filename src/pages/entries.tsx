@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { Plus, Search, SlidersHorizontal } from "lucide-react"
 import { PageHeader } from "@/components/common/page-header"
-import { EntryListItem } from "@/components/entries/entry-list-item"
+import { EntryListItem, EntryListItemSkeleton } from "@/components/entries/entry-list-item"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useEntries } from "@/hooks/use-entries"
@@ -10,7 +10,7 @@ import { useEntries } from "@/hooks/use-entries"
 const PAGE_SIZE = 30
 
 export function EntriesPage() {
-  const { entries } = useEntries()
+  const { entries, isLoading } = useEntries()
   const [search, setSearch] = useState("")
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
@@ -67,7 +67,13 @@ export function EntriesPage() {
         </Button>
       </div>
 
-      {visible.length === 0 ? (
+      {isLoading ? (
+        <div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <EntryListItemSkeleton key={i} />
+          ))}
+        </div>
+      ) : visible.length === 0 ? (
         <p className="border-b py-3 text-sm text-muted-foreground">
           No entries match your search.
         </p>
@@ -79,7 +85,7 @@ export function EntriesPage() {
         </div>
       )}
 
-      {visibleCount < filtered.length && (
+      {!isLoading && visibleCount < filtered.length && (
         <div className="mt-6 flex justify-center">
           <Button
             variant="outline"

@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { WorkEntry, WorkEntryDraft } from "@/types"
+import { isHtmlContentEmpty, sanitizeHtml } from "@/lib/sanitize-html"
 
 const optionalUrl = z
   .string()
@@ -11,7 +12,9 @@ const optionalUrl = z
 
 export const entryFormSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
-  description: z.string().trim().min(1, "Description is required"),
+  description: z
+    .string()
+    .refine((val) => !isHtmlContentEmpty(val), "Description is required"),
   date: z.string().min(1, "Date is required"),
   durationMinutes: z
     .string()
@@ -66,7 +69,7 @@ export function entryToFormValues(entry: WorkEntry): EntryFormValues {
 export function formValuesToDraft(values: EntryFormValues): WorkEntryDraft {
   return {
     title: values.title,
-    description: values.description,
+    description: sanitizeHtml(values.description),
     date: values.date,
     durationMinutes: Number(values.durationMinutes),
     project: values.project || undefined,
@@ -78,6 +81,8 @@ export function formValuesToDraft(values: EntryFormValues): WorkEntryDraft {
     commitHash: values.commitHash || undefined,
     workedAfterHours: values.workedAfterHours,
     status: values.status,
-    notes: values.notes || undefined,
+    notes: values.notes && !isHtmlContentEmpty(values.notes)
+      ? sanitizeHtml(values.notes)
+      : undefined,
   }
 }
